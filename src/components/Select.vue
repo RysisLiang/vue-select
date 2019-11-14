@@ -499,6 +499,7 @@
         open: false,
         isComposing: false,
         pushedTags: [],
+        dropDownMenuEl: undefined, // the $Refs element of drop down menu
         _value: [] // Internal value managed by Vue Select if no `value` prop is passed
       }
     },
@@ -1052,7 +1053,31 @@
        * @return {Boolean} True if open
        */
       dropdownOpen() {
-        return this.noDrop ? false : this.open && !this.mutableLoading
+          const res = this.noDrop ? false : this.open && !this.mutableLoading
+
+          this.$nextTick(() => {
+              this.dropdownMenuBox = this.$refs.dropdownMenu;
+              if (this.dropdownMenuBox) {
+                  if (res) {
+                      const menuHeight = document.getElementsByClassName('vs__dropdown-menu')[0].offsetHeight
+                      // 监听这个dom的scroll事件
+                      this.dropdownMenuBox.addEventListener('scroll', () => {
+                          const els = document.getElementsByClassName('vs__dropdown-option')
+                          if (els.length > 0) {
+                              const totalHeight = els[0].offsetHeight * this.optionsSize
+                              const scrollLength = this.dropdownMenuBox.scrollTop
+                              if (menuHeight + scrollLength + 10 >= totalHeight) {
+                                  this.$emit('srcollChange')
+                              }
+                          }
+                      })
+                  } else {
+                      this.dropdownMenuBox = undefined
+                  }
+              }
+          })
+
+          return res
       },
 
       /**
